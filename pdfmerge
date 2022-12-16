@@ -1,0 +1,192 @@
+#!/usr/bin/python3
+
+from PyPDF2 import PdfFileWriter, PdfFileReader
+import argparse
+
+def main():
+    #input needed from user: pdf filename(s) in order, page numbers (optional)
+    # format of input: (filename,pageNums=All), ...
+    parser = argparse.ArgumentParser(
+            prog = 'PDF Merge',
+            description = "Merges .pdf documents according to user specifications. More functionality being added to manipulate .pdf documents further",
+            epilog = "Created by Zachary Minken")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-m", "--merge", action="store_true", 
+            help="merge two or more pdfs")
+#    group.add_argument("-x", "--extract", action="store_true", 
+#            help="extract specific pages from a pdf")
+    group.add_argument("-s", "--split", action="store_true", 
+            help="split the pdf into separate pages")
+
+    parser.add_argument('-v', '--verbose', action="store_true")
+
+    parser.add_argument('-d', '--delimiter', default='::',
+            help="set delimiter between filename and page range. defaults to '::'")
+    parser.add_argument('filenamepages', nargs='+', 
+            help="filename of input pdf with page numbers (optional) in format filename::pages")
+    parser.add_argument("-o", "--outfile", default="out.pdf", 
+            help="name of the output pdf file. Defaults to 'out.pdf'")
+    #parser.add_argument('-p', '--pages', default="all", help="page(s) to be used")
+    
+    args = parser.parse_args()
+
+    
+    filepages = processInput(args.filenamepages, args.delimiter)
+
+    outfile = args.outfile
+
+    if args.verbose:
+        print(args)
+        print(f"Filepages: {filepages}")
+        print(f"Output File: {outfile}")
+
+#    if args.extract:
+#        print("Extract Mode Activated")
+#        extract(filepages, outfile)
+
+    if args.split:
+        print("Split Mode Activated")
+        split(filepages, outfile)
+
+    elif args.merge:
+        if len(filepages) >= 1:
+            print("Merge Mode Activated")
+            merge(filepages, outfile)
+        else:
+            print("Only one filename detected. Need at least 2 to merge")
+    else:
+        print("Please specify either merge [-m, --merge] or split [-s, --split].")
+
+
+#END MAIN
+
+
+def extract(filepages, outfile):
+    # I thought this would be useful, but now I can't figure out how the functinoality would be different than split or merge
+    pass
+
+def split(filepages, outfile):
+
+    # open pdf files with PdfFileReader(open(filename, "rb"))
+    print("Reading Input Files...")
+
+    for i in range(len(filepages)):
+        filepages[i][0] = PdfFileReader(open(filepages[i][0], "rb"))
+
+    # create list to hold PdfFileWriters
+    pdfList = []
+
+    # add selected pages from PdfFileReader objets to PdfFileWriter object
+    print("Adding pages...")
+
+    for i in range(len(filepages)):
+        if filepages[i][1] == ['all']:
+            for k in range(filepages[i][0].numPages):
+                p = PdfFileWriter()
+                p.addPage(filepages[i][0].getPage(k))
+                pdfList.append(p)
+        else:
+            for j in range(len(filepages[i][1])):
+#                print(filepages[i][1])
+                p = PdfFileWriter()
+                p.addPage(filepages[i][0].getPage(filepages[i][1][j]))
+                pdfList.append(p)
+
+    # write PdfFileWriter object to outfile
+
+    print("Writing Output...")
+    for i in range(len(pdfList)):
+        with open(f"{i}_{outfile}", "wb") as outputStream:
+#            print(f"pdfList[{i}] == {pdfList[i]}")
+            pdfList[i].write(outputStream)
+
+    # display success message to user
+    print(f"Files successfully split and saved with base name {outfile}!")
+
+
+def merge(filepages, outfile):
+    # open pdf files with PdfFileReader(open(filename, "rb"))
+    print("Reading Input Files...")
+
+    for i in range(len(filepages)):
+        print(filepages[i][0])
+        filepages[i][0] = PdfFileReader(open(filepages[i][0], "rb"))
+
+    # create PdfFileWriter
+    p = PdfFileWriter()
+
+    # add selected pages from PdfFileReader objets to PdfFileWriter object
+    print("Adding pages...")
+
+    for i in range(len(filepages)):
+        if filepages[i][1] == ['all']:
+            for k in range(filepages[i][0].numPages):
+                p.addPage(filepages[i][0].getPage(k))
+        else:
+            for j in range(len(filepages[i][1])):
+#                print(filepages[i][1])
+                p.addPage(filepages[i][0].getPage(filepages[i][1][j]))
+
+    # write PdfFileWriter object to outfile
+
+    print("Writing Output...")
+    with open(outfile, "wb") as outputStream:
+        p.write(outputStream)
+
+    # display success message to user
+    print(f"Files successfully merged into {outfile}!")
+
+
+
+def processInput(filenamepages, delimiter):
+    print("Processing...")
+
+    filepages = [fp.split(delimiter) for fp in filenamepages]
+
+    for fp in filepages:
+        if len(fp) > 2:
+            raise Exception("file/page separation error")
+        elif len(fp) == 1:
+            fp.append(['all'])
+        elif len(fp) == 2:
+            fp[1] = fp[1].split(',')
+            for i in range(len(fp[1])):
+                p = fp[1][i]
+                if type(p) == str and '-' in p:
+                    low, high = p.split('-')
+                    low = int(low)
+                    high = int(high)
+                    fp[1][i] = [j for j in range(low, high + 1)]
+
+                elif type(p) == str:
+                    p = int(p)
+                    fp[1][i] = p
+    
+    # cleaning up
+
+    files = [f[0] for f in filepages]
+    pageranges = [[] for i in range(len(filepages))]
+    for i in range(len(filepages)):
+        for page in filepages[i][1]:
+            if type(page) == str:
+                if page == 'all':
+                    pageranges[i].append(page)
+                else:
+                    pageranges[i].append(int(page))
+            elif type(page) == int:
+                pageranges[i].append(page - 1)
+            elif type(page) == list:
+                for p in page:
+                    pageranges[i].append(p-1)
+            else:
+                print(f"page type is {type(page)}")
+
+    fpages = [[files[i], pageranges[i]] for i in range(len(filepages))]
+
+
+    return fpages
+
+
+if __name__ == '__main__':
+    main()
