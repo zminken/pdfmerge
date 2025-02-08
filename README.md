@@ -5,7 +5,7 @@ Dependancies:
     PyPDF2
     send2trash
 
-usage: PDF Merge [-h] [-m | -x | -s] [-v] [-d DELIMITER] [-o OUTFILE]
+usage: pdfmerge [-h] [-m | -x | -s] [-v] [-d DELIMITER] [-o OUTFILE]
                  filenamepages [filenamepages ...]
 
 Merges, splits, and extracts pages from .pdf documents according to user specifications.
