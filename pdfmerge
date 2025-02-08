@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from PyPDF2 import PdfFileWriter, PdfFileReader
-import argparse
+import argparse, send2trash
 
 def main():
     #input needed from user: pdf filename(s) in order, page numbers (optional)
@@ -14,8 +14,8 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-m", "--merge", action="store_true", 
             help="merge two or more pdfs")
-#    group.add_argument("-x", "--extract", action="store_true", 
-#            help="extract specific pages from a pdf")
+    group.add_argument("-x", "--extract", action="store_true", 
+            help="extract specific pages from a pdf")
     group.add_argument("-s", "--split", action="store_true", 
             help="split the pdf into separate pages")
 
@@ -41,11 +41,11 @@ def main():
         print(f"Filepages: {filepages}")
         print(f"Output File: {outfile}")
 
-#    if args.extract:
-#        print("Extract Mode Activated")
-#        extract(filepages, outfile)
+    if args.extract:
+        print("Extract Mode Activated")
+        extract(filepages, outfile, args.delimiter)
 
-    if args.split:
+    elif args.split:
         print("Split Mode Activated")
         split(filepages, outfile)
 
@@ -62,9 +62,13 @@ def main():
 #END MAIN
 
 
-def extract(filepages, outfile):
-    # I thought this would be useful, but now I can't figure out how the functinoality would be different than split or merge
-    pass
+def extract(filepages, outfile, delimeter):
+    tmp=merge(processInput(split(filepages, outfile),delimeter),outfile)
+    #print(tmp)
+    for t in tmp:
+        #print(f"Deleting temprary file {t}")
+        send2trash.send2trash(t)
+    
 
 def split(filepages, outfile):
 
@@ -76,6 +80,10 @@ def split(filepages, outfile):
 
     # create list to hold PdfFileWriters
     pdfList = []
+
+    # create list to hold pdf file names
+    pdfNames = []
+
 
     # add selected pages from PdfFileReader objets to PdfFileWriter object
     print("Adding pages...")
@@ -100,17 +108,22 @@ def split(filepages, outfile):
         with open(f"{i}_{outfile}", "wb") as outputStream:
 #            print(f"pdfList[{i}] == {pdfList[i]}")
             pdfList[i].write(outputStream)
+            pdfNames.append(f"{i}_{outfile}")
 
     # display success message to user
     print(f"Files successfully split and saved with base name {outfile}!")
+    #print(pdfNames)
+    return pdfNames
 
 
 def merge(filepages, outfile):
     # open pdf files with PdfFileReader(open(filename, "rb"))
     print("Reading Input Files...")
+    inFiles = []
 
     for i in range(len(filepages)):
-        print(filepages[i][0])
+        #print(filepages[i][0])
+        inFiles.append(filepages[i][0])
         filepages[i][0] = PdfFileReader(open(filepages[i][0], "rb"))
 
     # create PdfFileWriter
@@ -136,6 +149,7 @@ def merge(filepages, outfile):
 
     # display success message to user
     print(f"Files successfully merged into {outfile}!")
+    return inFiles
 
 
 
