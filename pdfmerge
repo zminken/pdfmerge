@@ -8,7 +8,7 @@ def main():
     # format of input: (filename,pageNums=All), ...
     parser = argparse.ArgumentParser(
             prog = 'PDF Merge',
-            description = "Merges .pdf documents according to user specifications. More functionality being added to manipulate .pdf documents further",
+            description = "Merges, splits, and extracts pages from .pdf documents according to user specifications.",
             epilog = "Created by Zachary Minken")
 
     group = parser.add_mutually_exclusive_group()
