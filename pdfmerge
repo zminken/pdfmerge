@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from PyPDF2 import PdfFileWriter, PdfFileReader
+from pypdf import PdfWriter as PdfFileWriter, PdfReader as PdfFileReader
 import argparse, send2trash
 
 def main():
@@ -90,15 +90,15 @@ def split(filepages, outfile):
 
     for i in range(len(filepages)):
         if filepages[i][1] == ['all']:
-            for k in range(filepages[i][0].numPages):
+            for k in range(len(filepages[i][0].pages)):
                 p = PdfFileWriter()
-                p.addPage(filepages[i][0].getPage(k))
+                p.add_page(filepages[i][0].get_page(k))
                 pdfList.append(p)
         else:
             for j in range(len(filepages[i][1])):
 #                print(filepages[i][1])
                 p = PdfFileWriter()
-                p.addPage(filepages[i][0].getPage(filepages[i][1][j]))
+                p.add_page(filepages[i][0].get_page(filepages[i][1][j]))
                 pdfList.append(p)
 
     # write PdfFileWriter object to outfile
@@ -134,12 +134,12 @@ def merge(filepages, outfile):
 
     for i in range(len(filepages)):
         if filepages[i][1] == ['all']:
-            for k in range(filepages[i][0].numPages):
-                p.addPage(filepages[i][0].getPage(k))
+            for k in range(len(filepages[i][0].pages)):
+                p.add_page(filepages[i][0].get_page(k))
         else:
             for j in range(len(filepages[i][1])):
 #                print(filepages[i][1])
-                p.addPage(filepages[i][0].getPage(filepages[i][1][j]))
+                p.add_page(filepages[i][0].get_page(filepages[i][1][j]))
 
     # write PdfFileWriter object to outfile
 
