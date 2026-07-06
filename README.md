@@ -2,7 +2,7 @@
 A command line utility coded in python to merge and split multiple pdfs.
 
 Dependancies: 
-    PyPDF2
+    pypdf
     send2trash
 
 usage: pdfmerge [-h] [-m | -x | -s] [-v] [-d DELIMITER] [-o OUTFILE]
