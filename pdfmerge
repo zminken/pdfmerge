@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from pypdf import PdfWriter as PdfFileWriter, PdfReader as PdfFileReader
 import argparse, send2trash
